@@ -17,8 +17,9 @@ tasks=[]
 def show_tasks():
     pass
 @app.put("/task")
-def put_task(task,db:Session=Depends(get_db())):
+def put_task(task,db=Depends(get_db)):
     db.add(task)
+    db.commit()
     return "Added succesfully"
 
     
