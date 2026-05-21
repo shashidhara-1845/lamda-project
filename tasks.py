@@ -1,13 +1,11 @@
-
-
-class tasks:
-    id:int
-    task:str
-    status:bool
-    tag:int
-    def __init__(self,id,task,status,tag):
-        self.id=id
-        self.task=task
-        self.status=status
-        self.tag=tag
+from sqlalchemy import Column,Integer,String,Boolean
+from sqlalchemy.ext.declarative import declarative_base
+Base=declarative_base()
+class tasks(Base):
+    __tablename__ = "tasks"
+    id=Column(Integer,primary_key=True,index=True)
+    task=Column(String)
+    status=Column(Boolean)
+    tag=Column(Integer)
+    
 
