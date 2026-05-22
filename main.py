@@ -26,8 +26,28 @@ def put_task(m: model,db=Depends(get_db)):
     db.commit()
     return "Added succesfully"
 
-# @app.put("/task/{id}")
-# def change_status(id):
+@app.put("/task/{name}")
+def change_status(name,db=Depends(get_db)):
+    task=db.query(tasks).filter(tasks.name==name).first()
+    if task:
+        task.status=not task.status
+        db.commit()
+        return "Status changed"
+    else:
+        return "Task not found"
+
+@app.delete("/task/{name}")
+def delete_task(name,db=Depends(get_db)):
+    task=db.query(tasks).filter(tasks.name==name).first()
+    if task:
+        db.delete(task)
+        db.commit()
+        return "Task deleted"
+    else:
+        return "Task not found"
+
+
+
 
 
 
