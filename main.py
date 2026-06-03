@@ -1,11 +1,20 @@
-from fastapi import FastAPI, Depends 
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from tasks import *
 from database import *
 from model import *
-from sqlalchemy.orm import Session 
+from sqlalchemy.orm import Session
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_db():
     db = Sessionlocal()
@@ -19,8 +28,11 @@ def greet():
     return "Hello"
 
 @app.get("/task")
-def show_tasks(db: Session = Depends(get_db)):
-    return db.query(tasks).all()
+def show_tasks(tag: int = None, db: Session = Depends(get_db)):
+    q = db.query(tasks)
+    if tag is not None:
+        q = q.filter(tasks.tag == tag)
+    return q.all()
 
 @app.post("/task")
 def put_task(m: model, db: Session = Depends(get_db)):
@@ -31,21 +43,31 @@ def put_task(m: model, db: Session = Depends(get_db)):
     return {"message": "Task added", "id": new_task.id}
 
 @app.put("/task/{id}")
-def change_status(id: int, db: Session = Depends(get_db)):
+def update_task(id: int, m: model, db: Session = Depends(get_db)):
     task = db.query(tasks).filter(tasks.id == id).first()
-    if task:
-        task.status = not task.status
-        db.commit()
-        return {"message": "Status changed"}
-    else:
-        return {"message": "Task not found"}
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task.task = m.task
+    task.description = m.description
+    task.tag = m.tag
+    task.status = m.status
+    db.commit()
+    return {"message": "Task updated"}
+
+@app.patch("/task/{id}/status")
+def toggle_status(id: int, db: Session = Depends(get_db)):
+    task = db.query(tasks).filter(tasks.id == id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task.status = not task.status
+    db.commit()
+    return {"message": "Status toggled", "status": task.status}
 
 @app.delete("/task/{id}")
 def delete_task(id: int, db: Session = Depends(get_db)):
     task = db.query(tasks).filter(tasks.id == id).first()
-    if task:
-        db.delete(task)
-        db.commit()
-        return {"message": "Task deleted"}
-    else:
-        return {"message": "Task not found"}
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    db.delete(task)
+    db.commit()
+    return {"message": "Task deleted"}
