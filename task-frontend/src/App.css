@@ -70,8 +70,12 @@ body, html {
   padding: 20px; cursor: pointer; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
   border-top: 3px solid transparent; 
 }
-.category-box:hover { background: rgba(255, 255, 255, 0.05); transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
-
+.category-box:hover { 
+  background: rgba(15, 23, 42, 0.8); /* Darkens the glass panel on hover so text stays 100% readable */
+  border-color: rgba(255, 255, 255, 0.25); /* Slightly brightens the border for a crisp look */
+  transform: translateY(-5px); 
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5); 
+}
 .accent-blue { border-top-color: #3b82f6; }
 .accent-purple { border-top-color: #a855f7; }
 .accent-green { border-top-color: #10b981; }
