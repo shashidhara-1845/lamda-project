@@ -51,6 +51,13 @@ lamda-project/
 ```
 
 ## Setup
+### Environment Variables
+
+Create a `.env` file in the project root directory and add:
+
+```env
+DATABASE_URL=mysql+pymysql://username:password@localhost:3306/task_db
+```
 
 ### Backend
 
