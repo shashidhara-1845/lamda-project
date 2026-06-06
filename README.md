@@ -126,14 +126,4 @@ http://localhost:5173
 | PUT    | `/task/{id}` | Update a task      |
 | DELETE | `/task/{id}` | Delete a task      |
 
-## Concepts Used
 
-* REST API Design
-* CRUD Operations
-* SQLAlchemy ORM
-* Pydantic Data Validation
-* Dependency Injection
-* React Hooks (`useState`, `useEffect`)
-* CORS Configuration
-* Client-Server Architecture
-* Persistent Data Storage with MySQL
