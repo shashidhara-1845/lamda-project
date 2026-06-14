@@ -31,11 +31,9 @@ def greet():
 
 
 @app.get("/task")
-def show_tasks(tag: int = None, db: Session = Depends(get_db)):
+@app.get("/task")
+def show_tasks(db: Session = Depends(get_db)):
     q = db.query(tasks)
-    if tag is not None:
-        q = q.filter(tasks.tag == tag)
-
     return q.all()
 
 
