@@ -29,6 +29,15 @@ def get_db():
 def greet():
     return {"message": "Task Management API"}
 
+@app.get("/task/tag/{tag_id}")
+def get_tasks_by_tag(tag_id: int, db: Session = Depends(get_db)):
+    return db.query(tasks).filter(tasks.tag == tag_id).all()
+
+
+@app.get("/task/{search}")
+def search_tasks(search: str, db: Session = Depends(get_db)):
+    return db.query(tasks).filter(tasks.task.ilike(f"%{search}%")).all() 
+
 
 @app.get("/task")
 @app.get("/task")

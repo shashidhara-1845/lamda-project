@@ -5,6 +5,7 @@ const API_URL = 'http://localhost:8000';
 
 function App() {
   const [tasks, setTasks] = useState([]);
+  const [tasksByTag, setTasksByTag] = useState({});
   
   const [taskName, setTaskName] = useState('');
   const [taskDesc, setTaskDesc] = useState('');
@@ -29,15 +30,37 @@ function App() {
   // Helper to get today's date in YYYY-MM-DD
   const getToday = () => new Date().toISOString().split('T')[0];
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (search = '') => {
     try {
-      const response = await fetch(`${API_URL}/task`);
+      const url = search ? `${API_URL}/task/${encodeURIComponent(search)}` : `${API_URL}/task`;
+      const response = await fetch(url);
       const data = await response.json();
       setTasks(data);
     } catch (error) { console.error(error); }
   };
 
-  useEffect(() => { fetchTasks(); }, []);
+  const fetchTasksByTag = async (tagId) => {
+    try {
+      const response = await fetch(`${API_URL}/task/tag/${tagId}`);
+      const data = await response.json();
+      setTasksByTag(prev => ({ ...prev, [tagId]: data }));
+    } catch (error) { console.error(error); }
+  };
+
+  const refreshAllTags = () => {
+    categories.forEach(cat => fetchTasksByTag(cat.id));
+  };
+
+  useEffect(() => { refreshAllTags(); }, []);
+
+  useEffect(() => {
+    if (searchQuery) {
+      const debounceTimer = setTimeout(() => { fetchTasks(searchQuery); }, 400);
+      return () => clearTimeout(debounceTimer);
+    } else {
+      setTasks([]);
+    }
+  }, [searchQuery]);
 
   const handleAddTask = async (e) => {
     e.preventDefault();
@@ -53,7 +76,8 @@ function App() {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newTask)
       });
       if (response.ok) {
-        setTaskName(''); setTaskDesc(''); setTaskDate(''); fetchTasks();
+        setTaskName(''); setTaskDesc(''); setTaskDate('');
+        fetchTasksByTag(parseInt(taskTag));
       }
     } catch (error) { console.error(error); }
   };
@@ -71,20 +95,23 @@ function App() {
       const response = await fetch(`${API_URL}/task/${editingTask.id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedTask)
       });
-      if (response.ok) { setEditingTask(null); fetchTasks(); }
+      if (response.ok) {
+        setEditingTask(null);
+        fetchTasksByTag(updatedTask.tag);
+        if (searchQuery) fetchTasks(searchQuery);
+      }
     } catch (error) { console.error(error); }
   };
 
   const handleDeleteTask = async (id) => {
+    const tagId = editingTask.tag;
     try {
       await fetch(`${API_URL}/task/${id}`, { method: 'DELETE' });
-      setEditingTask(null); fetchTasks();
+      setEditingTask(null);
+      fetchTasksByTag(tagId);
+      if (searchQuery) fetchTasks(searchQuery);
     } catch (error) { console.error(error); }
   };
-
-  const filteredTasks = tasks.filter(t => 
-    t.task.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div className="app-container">
@@ -112,8 +139,12 @@ function App() {
           {categories.map((category, index) => {
             
             // Sort by Date (Earliest first). Tasks with no date go to the bottom.
-            const categoryTasks = filteredTasks
-              .filter(t => t.tag === category.id)
+            const sourceList = searchQuery
+              ? tasks.filter(t => t.tag === category.id)
+              : (tasksByTag[category.id] || []);
+
+            const categoryTasks = sourceList
+              .slice()
               .sort((a, b) => {
                 const dateA = a.due_date || '9999-12-31';
                 const dateB = b.due_date || '9999-12-31';
