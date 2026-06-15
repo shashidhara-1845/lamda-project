@@ -39,7 +39,7 @@ def search_tasks(search: str, db: Session = Depends(get_db)):
     return db.query(tasks).filter(tasks.task.ilike(f"%{search}%")).all() 
 
 
-@app.get("/task")
+
 @app.get("/task")
 def show_tasks(db: Session = Depends(get_db)):
     q = db.query(tasks)
